@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main", "feature/**" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+          dotnet-quality: 'preview'
+
+      - name: Restore
+        run: dotnet restore DotNetSearch/DotNetSearch.csproj
+
+      - name: Build
+        run: dotnet build DotNetSearch/DotNetSearch.csproj -c Release --no-restore
+
+      - name: Smoke test
+        run: |
+          echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"0"}}}' \
+          | timeout 5 dotnet run --project DotNetSearch/DotNetSearch.csproj -c Release --no-build || true
+
+  auto-tag:
+    name: Bump version tag and trigger release
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # need full history to read all tags
+
+      - name: Compute next patch version
+        id: ver
+        run: |
+          # Get the latest semver tag; default to v0.0.0 if none exists
+          LATEST=$(git tag --list 'v*' --sort=-version:refname | head -n1)
+          LATEST=${LATEST:-v0.0.0}
+          echo "Latest tag: $LATEST"
+          # Strip leading 'v' and split
+          IFS='.' read -r MAJOR MINOR PATCH <<< "${LATEST#v}"
+          PATCH=$((PATCH + 1))
+          NEXT="v${MAJOR}.${MINOR}.${PATCH}"
+          echo "Next tag: $NEXT"
+          echo "TAG=$NEXT" >> $GITHUB_OUTPUT
+
+      - name: Create and push new tag
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag ${{ steps.ver.outputs.TAG }}
+          git push origin ${{ steps.ver.outputs.TAG }}

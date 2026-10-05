@@ -1,0 +1,184 @@
+name: Release
+
+on:
+  push:
+    branches: [ "main" ]
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  id-token: write
+
+env:
+  PROJECT: DotNetSearch/DotNetSearch.csproj
+
+jobs:
+  publish-exe:
+    name: Build EXE (${{ matrix.rid }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - rid: win-x64
+            os: windows-latest
+            binary: DotNetSearch.exe
+            artifact: DotNetSearch-win-x64.exe
+          - rid: linux-x64
+            os: ubuntu-latest
+            binary: DotNetSearch
+            artifact: DotNetSearch-linux-x64
+          - rid: osx-arm64
+            os: macos-latest
+            binary: DotNetSearch
+            artifact: DotNetSearch-osx-arm64
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve version tag
+        id: ver
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            TAG="${GITHUB_REF_NAME}"
+          else
+            LATEST=$(git tag --list 'v*' --sort=-version:refname | head -n1)
+            LATEST=${LATEST:-v0.0.0}
+            IFS='.' read -r MAJOR MINOR PATCH <<< "${LATEST#v}"
+            PATCH=$((PATCH + 1))
+            TAG="v${MAJOR}.${MINOR}.${PATCH}"
+          fi
+          VERSION="${TAG#v}"
+          echo "TAG=$TAG"         >> $GITHUB_OUTPUT
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "Resolved tag: $TAG"
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+          dotnet-quality: 'preview'
+
+      - name: Publish self-contained single-file EXE
+        shell: bash
+        run: |
+          dotnet publish ${{ env.PROJECT }} \
+            -c Release \
+            -r ${{ matrix.rid }} \
+            --self-contained true \
+            -p:PublishSingleFile=true \
+            -p:EnableCompressionInSingleFile=true \
+            -p:PublishTrimmed=true \
+            -p:TrimMode=partial \
+            -p:StripSymbols=true \
+            -p:InvariantGlobalization=true \
+            -p:Version=${{ steps.ver.outputs.VERSION }} \
+            -o ./publish/${{ matrix.rid }}
+
+      - name: Rename binary to platform artifact name
+        shell: bash
+        run: mv ./publish/${{ matrix.rid }}/${{ matrix.binary }} ./publish/${{ matrix.rid }}/${{ matrix.artifact }}
+
+      - name: Upload EXE artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: ./publish/${{ matrix.rid }}/${{ matrix.artifact }}
+
+  create-release:
+    name: Create GitHub Release
+    needs: publish-exe
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve tag
+        id: ver
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            TAG="${GITHUB_REF_NAME}"
+          else
+            LATEST=$(git tag --list 'v*' --sort=-version:refname | head -n1)
+            LATEST=${LATEST:-v0.0.0}
+            IFS='.' read -r MAJOR MINOR PATCH <<< "${LATEST#v}"
+            PATCH=$((PATCH + 1))
+            TAG="v${MAJOR}.${MINOR}.${PATCH}"
+          fi
+          echo "TAG=$TAG" >> $GITHUB_OUTPUT
+          echo "Resolved tag: $TAG"
+
+      - name: Create tag if not already present
+        shell: bash
+        run: |
+          TAG="${{ steps.ver.outputs.TAG }}"
+          if git ls-remote --tags origin "$TAG" | grep -q "$TAG"; then
+            echo "Tag $TAG already exists — skipping."
+          else
+            git config user.name  "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git tag "$TAG"
+            git push origin "$TAG"
+            echo "Created and pushed tag $TAG"
+          fi
+
+      - name: Download all platform EXEs
+        uses: actions/download-artifact@v4
+        with:
+          path: ./release-assets
+          merge-multiple: true
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.ver.outputs.TAG }}
+          name: "DotNetSearch ${{ steps.ver.outputs.TAG }}"
+          body: |
+            ## DotNetSearch ${{ steps.ver.outputs.TAG }}
+
+            Self-contained executables — **no .NET installation required** on the target machine.
+
+            ### Download for your platform
+
+            | Platform    | File                      |
+            |-------------|---------------------------|
+            | Windows x64 | DotNetSearch-win-x64.exe   |
+            | Linux x64   | DotNetSearch-linux-x64     |
+            | macOS ARM64 | DotNetSearch-osx-arm64     |
+
+            ### Add to your `.mcp.json` (Windows)
+
+            ```json
+            {
+              "servers": {
+                "DotNetSearch": {
+                  "type": "stdio",
+                  "command": "C:\\Tools\\DotNetSearch-win-x64.exe"
+                }
+              }
+            }
+            ```
+
+            Linux / macOS — make executable first: `chmod +x DotNetSearch-linux-x64`
+          files: ./release-assets/*
+          generate_release_notes: true
+
+      - name: Install MCP Publisher
+        shell: bash
+        run: |
+          curl -sSL "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_linux_amd64.tar.gz" | tar -xz mcp-publisher
+          chmod +x mcp-publisher
+
+      - name: Publish to MCP Registry
+        continue-on-error: true
+        shell: bash
+        run: |
+          ./mcp-publisher login github-oidc
+          ./mcp-publisher publish server.json
