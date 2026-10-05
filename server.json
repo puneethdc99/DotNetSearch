@@ -3,9 +3,10 @@
   "name": "io.github.puneethdc99/dotnetsearch",
   "title": "DotNetSearch",
   "description": "Token-efficient MCP search server for AI agents across local directories.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "repository": {
     "url": "https://github.com/puneethdc99/DotNetSearch",
-    "source": "github"
+    "source": "github",
+    "id": "1405646006"
   }
 }
