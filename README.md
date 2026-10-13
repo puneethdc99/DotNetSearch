@@ -1,5 +1,12 @@
 # DotNetSearch — MCP Search & PDF Server
 
+[![MCP Registry](https://img.shields.io/badge/MCP%20Registry-io.github.puneethdc99%2Fdotnetsearch-blue)](https://registry.modelcontextprotocol.io/v0/servers?search=dotnetsearch)
+[![GitHub Release](https://img.shields.io/github/v/release/puneethdc99/DotNetSearch)](https://github.com/puneethdc99/DotNetSearch/releases/latest)
+[![CI Build](https://github.com/puneethdc99/DotNetSearch/actions/workflows/build.yml/badge.svg)](https://github.com/puneethdc99/DotNetSearch/actions/workflows/build.yml)
+
+> **MCP Server Identifier:** `mcp-name: io.github.puneethdc99/dotnetsearch`  
+> *(Proof of package ownership for GitHub MCP Registry inclusion)*
+
 **DotNetSearch** is a self-contained MCP (Model Context Protocol) server that empowers GitHub Copilot, Claude, Cursor, and other AI agents with high-performance codebase search, NuGet package decompilation, whitespace token reduction, and **deep PDF document reading and analysis**:
 
 ### Key Tools Overview
