@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -7,9 +7,9 @@
     <Nullable>enable</Nullable>
     <AssemblyName>DotNetSearch</AssemblyName>
     <RootNamespace>DotNetSearch</RootNamespace>
-    <Version>1.0.0</Version>
+    <Version>1.0.2</Version>
     <Authors>Puneeth DC</Authors>
-    <Description>Token-efficient MCP search server for AI agents - keyword and BM25 search over local directories.</Description>
+    <Description>Token-efficient MCP server for codebase search, NuGet decompilation, and deep PDF reading.</Description>
     <RepositoryUrl>https://github.com/puneethdc99/DotNetSearch</RepositoryUrl>
 
     <!--
