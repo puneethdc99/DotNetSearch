@@ -2,8 +2,8 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.puneethdc99/dotnetsearch",
   "title": "DotNetSearch",
-  "description": "Token-efficient MCP search server for AI agents across local directories.",
-  "version": "1.0.1",
+  "description": "Token-efficient MCP server for codebase search, NuGet decompilation, and deep PDF reading.",
+  "version": "1.0.2",
   "repository": {
     "url": "https://github.com/puneethdc99/DotNetSearch",
     "source": "github",
