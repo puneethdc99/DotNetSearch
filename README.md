@@ -35,14 +35,20 @@ Instead of reading full files (~2500 tokens each), the agent gets back only the 
 ## Step 1 — Installation
 
 ### Option A: Install via .NET CLI (NuGet Tool)
+If you have the .NET SDK installed (recommended for .NET developers):
 ```bash
 dotnet tool install -g PuneethDC.DotNetSearch
 ```
-Once installed, the command `dotnetsearch` is available globally in any terminal.
+Once installed, the command `dotnetsearch` is available globally from any terminal.
+
+To update to the latest version in the future:
+```bash
+dotnet tool update -g PuneethDC.DotNetSearch
+```
 
 ### Option B: Download Standalone Executable (No .NET required)
 
-Go to the [latest release](https://github.com/puneethdc99/DotNetSearch/releases/latest) and download the file for your platform:
+Go to the [latest release](https://github.com/puneethdc99/DotNetSearch/releases/latest) and download the self-contained executable for your platform:
 
 | Platform    | File to download          |
 |-------------|---------------------------|
@@ -74,10 +80,23 @@ Open (or create) your global MCP config file:
 | Claude Desktop | `%APPDATA%\Claude\claude_desktop_config.json` |
 | Cursor | `%USERPROFILE%\.cursor\mcp.json` |
 
-### Windows configuration
+### If installed via NuGet (.NET Tool):
+Works identically across Windows, Linux, and macOS without path differences:
 
-Add this to the `servers` section:
+```json
+{
+  "servers": {
+    "DotNetSearch": {
+      "type": "stdio",
+      "command": "dotnetsearch"
+    }
+  }
+}
+```
 
+### If using Standalone Executable:
+
+#### Windows:
 ```json
 {
   "servers": {
@@ -89,14 +108,26 @@ Add this to the `servers` section:
 }
 ```
 
-### Linux / macOS configuration
-
+#### Linux / macOS:
 ```json
 {
   "servers": {
     "DotNetSearch": {
       "type": "stdio",
       "command": "/usr/local/bin/DotNetSearch"
+    }
+  }
+}
+```
+
+### Alternative: Run on-demand with `dnx` (Zero-Install):
+```json
+{
+  "servers": {
+    "DotNetSearch": {
+      "type": "stdio",
+      "command": "dnx",
+      "args": ["PuneethDC.DotNetSearch"]
     }
   }
 }
