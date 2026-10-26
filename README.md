@@ -1,6 +1,7 @@
 # DotNetSearch — MCP Search & PDF Server
 
 [![MCP Registry](https://img.shields.io/badge/MCP%20Registry-io.github.puneethdc99%2Fdotnetsearch-blue)](https://registry.modelcontextprotocol.io/v0/servers?search=dotnetsearch)
+[![NuGet](https://img.shields.io/nuget/v/PuneethDC.DotNetSearch.svg)](https://www.nuget.org/packages/PuneethDC.DotNetSearch)
 [![GitHub Release](https://img.shields.io/github/v/release/puneethdc99/DotNetSearch)](https://github.com/puneethdc99/DotNetSearch/releases/latest)
 [![CI Build](https://github.com/puneethdc99/DotNetSearch/actions/workflows/build.yml/badge.svg)](https://github.com/puneethdc99/DotNetSearch/actions/workflows/build.yml)
 
@@ -31,7 +32,15 @@ Instead of reading full files (~2500 tokens each), the agent gets back only the 
 
 ---
 
-## Step 1 — Download the executable
+## Step 1 — Installation
+
+### Option A: Install via .NET CLI (NuGet Tool)
+```bash
+dotnet tool install -g PuneethDC.DotNetSearch
+```
+Once installed, the command `dotnetsearch` is available globally in any terminal.
+
+### Option B: Download Standalone Executable (No .NET required)
 
 Go to the [latest release](https://github.com/puneethdc99/DotNetSearch/releases/latest) and download the file for your platform:
 

@@ -7,10 +7,17 @@
     <Nullable>enable</Nullable>
     <AssemblyName>DotNetSearch</AssemblyName>
     <RootNamespace>DotNetSearch</RootNamespace>
-    <Version>1.0.2</Version>
+    <Version>1.0.3</Version>
     <Authors>Puneeth DC</Authors>
     <Description>Token-efficient MCP server for codebase search, NuGet decompilation, and deep PDF reading.</Description>
     <RepositoryUrl>https://github.com/puneethdc99/DotNetSearch</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/puneethdc99/DotNetSearch</PackageProjectUrl>
+    <PackageId>PuneethDC.DotNetSearch</PackageId>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>mcp;modelcontextprotocol;search;pdf;ai;copilot</PackageTags>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>dotnetsearch</ToolCommandName>
 
     <!--
       Self-contained: bundles the .NET runtime inside the exe.
@@ -30,12 +37,16 @@
     <!-- Smaller binary: strip debug symbols from the published exe -->
     <StripSymbols>true</StripSymbols>
 
-    <!-- Avoids ICU/globalization dependency � smaller and fully portable -->
+    <!-- Avoids ICU/globalization dependency - smaller and fully portable -->
     <InvariantGlobalization>true</InvariantGlobalization>
 
     <!-- Required: keeps System.Text.Json reflection working after trim -->
     <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="FreeSpire.PDF" Version="12.4.0" />

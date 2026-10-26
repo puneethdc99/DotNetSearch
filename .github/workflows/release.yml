@@ -91,7 +91,7 @@ jobs:
           path: ./publish/${{ matrix.rid }}/${{ matrix.artifact }}
 
   create-release:
-    name: Create GitHub Release
+    name: Create GitHub Release & Publish NuGet
     needs: publish-exe
     runs-on: ubuntu-latest
     steps:
@@ -112,7 +112,9 @@ jobs:
             PATCH=$((PATCH + 1))
             TAG="v${MAJOR}.${MINOR}.${PATCH}"
           fi
-          echo "TAG=$TAG" >> $GITHUB_OUTPUT
+          VERSION="${TAG#v}"
+          echo "TAG=$TAG"         >> $GITHUB_OUTPUT
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
           echo "Resolved tag: $TAG"
 
       - name: Create tag if not already present
@@ -135,6 +137,28 @@ jobs:
           path: ./release-assets
           merge-multiple: true
 
+      - name: Setup .NET 10 for NuGet
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+          dotnet-quality: 'preview'
+
+      - name: Pack NuGet Tool Package
+        shell: bash
+        run: |
+          dotnet pack ${{ env.PROJECT }} -c Release -p:Version=${{ steps.ver.outputs.VERSION }} -o ./nupkg
+
+      - name: Push to NuGet.org
+        shell: bash
+        env:
+          NUGET_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          if [ -n "$NUGET_KEY" ]; then
+            dotnet nuget push ./nupkg/*.nupkg --api-key "$NUGET_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
+          else
+            echo "NUGET_API_KEY secret not found, skipping NuGet push."
+          fi
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -143,9 +167,13 @@ jobs:
           body: |
             ## DotNetSearch ${{ steps.ver.outputs.TAG }}
 
-            Self-contained executables — **no .NET installation required** on the target machine.
+            ### Install as a .NET Tool (NuGet)
+            ```bash
+            dotnet tool install -g PuneethDC.DotNetSearch
+            ```
 
-            ### Download for your platform
+            ### Or Download Self-Contained Standalone Executables
+            No .NET installation required on the target machine:
 
             | Platform    | File                      |
             |-------------|---------------------------|
@@ -154,7 +182,6 @@ jobs:
             | macOS ARM64 | DotNetSearch-osx-arm64     |
 
             ### Add to your `.mcp.json` (Windows)
-
             ```json
             {
               "servers": {
@@ -167,7 +194,9 @@ jobs:
             ```
 
             Linux / macOS — make executable first: `chmod +x DotNetSearch-linux-x64`
-          files: ./release-assets/*
+          files: |
+            ./release-assets/*
+            ./nupkg/*.nupkg
           generate_release_notes: true
 
       - name: Install MCP Publisher
