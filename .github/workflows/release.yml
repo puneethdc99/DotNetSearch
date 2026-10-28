@@ -148,16 +148,16 @@ jobs:
         run: |
           dotnet pack ${{ env.PROJECT }} -c Release -p:Version=${{ steps.ver.outputs.VERSION }} -o ./nupkg
 
+      - name: NuGet Login (Trusted Publishing OIDC)
+        uses: NuGet/login@v1
+        id: nuget-login
+        with:
+          user: puneethdc99
+
       - name: Push to NuGet.org
         shell: bash
-        env:
-          NUGET_KEY: ${{ secrets.NUGET_API_KEY }}
         run: |
-          if [ -n "$NUGET_KEY" ]; then
-            dotnet nuget push ./nupkg/*.nupkg --api-key "$NUGET_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
-          else
-            echo "NUGET_API_KEY secret not found, skipping NuGet push."
-          fi
+          dotnet nuget push ./nupkg/*.nupkg --api-key "${{ steps.nuget-login.outputs.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
